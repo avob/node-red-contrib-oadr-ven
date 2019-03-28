@@ -197,6 +197,8 @@ module.exports = function(RED) {
       prepareReqMsg(req.rawBody).then(msg => {
         let oadrObj = {};
 
+
+
         if (
           msg.oadr.hasOwnProperty('responseType') &&
           msg.oadr.responseType !== 'unknown'
@@ -212,6 +214,16 @@ module.exports = function(RED) {
         let id = msg.oadr.requestID || 0;
 
         if (msg.oadr.responseType == 'oadrDistributeEvent') {
+          // var distributeEvent = msg.payload.data.oadrDistributeEvent;
+          // for(var i in distributeEvent.oadrEvent) {
+          //   var oadrEvent = distributeEvent.oadrEvent[i];
+          //   var eiEvent = oadrEvent.eiEvent;
+          //   var responseRequired = oadrEvent.oadrResponseRequired;
+
+          //   console.log("##########################");
+          //   console.log(eiEvent.eiActivePeriod.properties.dtstart.dateTime.date);
+          //   console.log("##########################");
+          // }
           // res.sendStatus(200);
           let ids = flowContext.get(`${node.name}:IDs`);
           let oadrResponse = {
@@ -653,15 +665,20 @@ module.exports = function(RED) {
       let profile = flowContext.get(`${node.name}:RegistrationProfile`);
 
       let myXML = oadr2b_model.createdEvent(oadrCreatedEvent);
-      if (profile.oadrHttpPullModel){
-        sendRequest(node.url, 'EiEvent', myXML, function(err, response, body) {
+      // if (profile.oadrHttpPullModel){
+      //   sendRequest(node.url, 'EiEvent', myXML, function(err, response, body) {
+      //     prepareResMsg(uuid, inCmd, body).then(msg => {
+      //       node.send(msg);
+      //     });
+      //   });
+      // } else {
+      //   myXML.then((xml) => { ee.emit(params.requestID, xml); });
+      // }
+       sendRequest(node.url, 'EiEvent', myXML, function(err, response, body) {
           prepareResMsg(uuid, inCmd, body).then(msg => {
             node.send(msg);
           });
         });
-      } else {
-        myXML.then((xml) => { ee.emit(params.requestID, xml); });
-      }
 
 
     };
@@ -993,7 +1010,7 @@ module.exports = function(RED) {
           available: [{
             properties: {
               dtstart: {
-                'date-time': params.dtstart || params['date-time'] || date1,
+                dateTime: params.dtstart || params['date-time'] || date1,
               },
               duration: {
                 duration: params.duration || 'PT1H',
