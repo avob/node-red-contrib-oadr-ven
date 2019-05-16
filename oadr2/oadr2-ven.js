@@ -214,6 +214,7 @@ module.exports = function(RED) {
         let id = msg.oadr.requestID || 0;
 
         if (msg.oadr.responseType == 'oadrDistributeEvent') {
+          console.log("auto event response")
           // var distributeEvent = msg.payload.data.oadrDistributeEvent;
           // for(var i in distributeEvent.oadrEvent) {
           //   var oadrEvent = distributeEvent.oadrEvent[i];
@@ -239,6 +240,36 @@ module.exports = function(RED) {
           }
 
           let myXML = oadr2b_model.response(oadrResponse);
+          myXML.then(msg => {
+            res.send(msg);
+          });
+        } else if (msg.oadr.responseType == 'oadrUpdateReport') {
+          console.log("auto updatereport response")
+          // var distributeEvent = msg.payload.data.oadrDistributeEvent;
+          // for(var i in distributeEvent.oadrEvent) {
+          //   var oadrEvent = distributeEvent.oadrEvent[i];
+          //   var eiEvent = oadrEvent.eiEvent;
+          //   var responseRequired = oadrEvent.oadrResponseRequired;
+
+          //   console.log("##########################");
+          //   console.log(eiEvent.eiActivePeriod.properties.dtstart.dateTime.date);
+          //   console.log("##########################");
+          // }
+          // res.sendStatus(200);
+          let ids = flowContext.get(`${node.name}:IDs`);
+          let oadrResponse = {
+            eiResponse: {
+              responseCode: '200',
+              responseDescription: 'OK',
+              requestID: id,
+            },
+          };
+
+          if (oadrProfile !== '2.0a') {
+            oadrResponse.venID = ids.venID;
+          }
+
+          let myXML = oadr2b_model.updatedReport(oadrResponse);
           myXML.then(msg => {
             res.send(msg);
           });
@@ -788,22 +819,27 @@ module.exports = function(RED) {
       let inCmd = msg.payload.requestType || 'unknown';
       let uuid = params.requestID || uuidv4();
 
-      let oadrUpdateReport = {
-        requestID: uuid,
-      };
+      let oadrUpdateReport = null;
 
-      let myXML = oadr2b_model.updateReport(oadrUpdateReport);
+      let oadrRegisterReport = null;
+      if (params.oadrUpdateReport){
+        oadrUpdateReport = params.oadrUpdateReport;
 
-      sendRequest(node.url, 'EiReport', myXML, function(err, response, body) {
-        if (err) { // TODO: Update
-          node.error(err);
-          return;
-        }
+        let myXML = oadr2b_model.updateReport(oadrUpdateReport);
 
-        prepareResMsg(uuid, inCmd, body).then(msg => {
-          node.send(msg);
+        sendRequest(node.url, 'EiReport', myXML, function(err, response, body) {
+          if (err) { // TODO: Update
+            node.error(err);
+            return;
+          }
+
+          prepareResMsg(uuid, inCmd, body).then(msg => {
+            node.send(msg);
+          });
         });
-      });
+      }
+
+      
     };
 
     const Poll = function(msg) {

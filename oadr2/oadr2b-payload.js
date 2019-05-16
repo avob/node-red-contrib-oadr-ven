@@ -323,6 +323,10 @@ module.exports = function(xmlSignature, stripPayloadEnv, tlsNode) {
     return transformSign('oadrUpdateReport', payload);
   };
 
+  oadr2b_model.updatedReport = function(payload) {
+    return transformSign('oadrUpdatedReport', payload);
+  };
+
   oadr2b_model.poll = function(payload) {
     return transformSign('oadrPoll', payload);
   };
